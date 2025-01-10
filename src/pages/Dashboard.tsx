@@ -26,7 +26,6 @@ export function Dashboard() {
   return (
     <div className="space-y-6 pb-16">
       <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-      
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KPICard
           title="Total Sales Amount"
@@ -38,6 +37,7 @@ export function Dashboard() {
           title="Total Items in Stock"
           value={totalItems}
           icon={<Package className="w-6 h-6 text-primary-600" />}
+          trend={{ value: 8.7, isPositive: true }}
         />
         <KPICard
           title="Net Profit Margin"

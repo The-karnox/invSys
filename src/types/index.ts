@@ -5,15 +5,20 @@ export interface Product {
   stock: number;
   category: string;
   reorderPoint: number;
-  gstRate?: number; // Optional GST rate per product
 }
 
 export interface BillItem {
   productId: string;
+  productName: string;
   quantity: number;
   price: number;
   subtotal: number;
-  gstAmount?: number;
+}
+
+export interface UPIDetails {
+  payeeName: string;
+  upiId: string;
+  qrCode?: string;
 }
 
 export interface Bill {
@@ -21,33 +26,37 @@ export interface Bill {
   billNumber: string;
   customerName: string;
   customerPhone: string;
+  date: Date;
   items: BillItem[];
   total: number;
-  date: Date;
-  paymentType: 'online' | 'cash';
-  isGstBill: boolean;
+  paymentType: 'cash' | 'online';
+  gst?: number;
   gstNumber?: string;
-  totalGst?: number;
+  upiDetails?: UPIDetails;
+  businessName?: string;
+  businessAddress?: string;
+  panNumber?: string;
 }
 
-export interface DashboardStats {
-  totalSales: number;
-  totalBills: number;
-  netProfitMargin: number;
-  topProducts: Product[];
-}
-
-export interface ReorderAlert {
-  productId: string;
-  currentStock: number;
-  reorderPoint: number;
-}
-
-export interface ImportedProduct {
+export interface StockAlert {
+  id: string;
   name: string;
-  category: string;
-  price: number;
   stock: number;
   reorderPoint: number;
-  gstRate?: number;
+}
+
+export interface StoreState {
+  products: Product[];
+  bills: Bill[];
+  loading: boolean;
+  selectedBillTheme: string;
+  stockAlerts: StockAlert[];
+  upiDetails: UPIDetails | null;
+  addProduct: (product: Product) => void;
+  updateProduct: (product: Product) => void;
+  deleteProduct: (id: string) => void;
+  createBill: (bill: Bill) => void;
+  setSelectedBillTheme: (themeId: string) => void;
+  updateUpiDetails: (details: UPIDetails) => void;
+  getDashboardStats: () => { totalSales: number; netProfitMargin: number };
 }

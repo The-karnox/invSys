@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Plus, Download, Eye, X } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { format } from 'date-fns';
-import { jsPDF } from 'jspdf';
+import { Bill } from '../types';
 import { BillModal } from '../components/Bills/BillModal';
 import { BillPreview } from '../components/Bills/BillPreview';
-import { Bill } from '../types';
 import { LoadingShimmer } from '../components/LoadingShimmer';
 import { SearchBar } from '../components/ui/SearchBar';
+import { generatePDF } from '../utils/pdfGenerator';
 
 export function Bills() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,53 +20,8 @@ export function Bills() {
     bill.billNumber.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const generatePDF = (bill: Bill) => {
-    const doc = new jsPDF();
-    
-    // Header
-    doc.setFontSize(20);
-    doc.text('CloudLedger', 20, 20);
-    doc.setFontSize(12);
-    doc.text('Invoice', 20, 30);
-    
-    // Bill Details
-    doc.text(`Bill No: ${bill.billNumber}`, 20, 40);
-    doc.text(`Customer: ${bill.customerName}`, 20, 50);
-    doc.text(`Phone: ${bill.customerPhone}`, 20, 60);
-    doc.text(`Date: ${format(bill.date, 'dd/MM/yyyy')}`, 20, 70);
-    doc.text(`Payment Type: ${bill.paymentType}`, 20, 80);
-    
-    // Table Header
-    let y = 100;
-    doc.setFillColor(235, 94, 40); // #eb5e28
-    doc.setTextColor(255, 255, 255);
-    doc.rect(20, y - 5, 170, 10, 'F');
-    doc.text('Item', 20, y);
-    doc.text('Qty', 100, y);
-    doc.text('Price', 130, y);
-    doc.text('Total', 160, y);
-    
-    // Reset text color for content
-    doc.setTextColor(0, 0, 0);
-    
-    // Table Content
-    y += 10;
-    bill.items.forEach((item) => {
-      const product = products.find((p) => p.id === item.productId);
-      doc.text(product?.name || '', 20, y);
-      doc.text(item.quantity.toString(), 100, y);
-      doc.text(`₹${item.price.toLocaleString('en-IN')}`, 130, y);
-      doc.text(`₹${item.subtotal.toLocaleString('en-IN')}`, 160, y);
-      y += 10;
-    });
-    
-    // Total
-    y += 10;
-    doc.setFillColor(240, 240, 240);
-    doc.rect(130, y - 5, 60, 10, 'F');
-    doc.text(`Total: ₹${bill.total.toLocaleString('en-IN')}`, 130, y + 3);
-    
-    doc.save(`${bill.billNumber}.pdf`);
+  const handleGeneratePDF = (bill: Bill) => {
+    generatePDF(bill, products);
   };
 
   if (loading) {
@@ -130,7 +85,7 @@ export function Bills() {
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => generatePDF(bill)}
+                        onClick={() => handleGeneratePDF(bill)}
                         className="text-primary-600 hover:text-primary-800"
                       >
                         <Download className="w-4 h-4" />
@@ -173,7 +128,7 @@ export function Bills() {
                   Close
                 </button>
                 <button
-                  onClick={() => generatePDF(previewBill)}
+                  onClick={() => handleGeneratePDF(previewBill)}
                   className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center gap-2"
                 >
                   <Download className="w-4 h-4" />

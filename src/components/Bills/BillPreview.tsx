@@ -15,20 +15,25 @@ export function BillPreview({ bill }: BillPreviewProps) {
       <div className="mb-8">
         <div className="flex justify-between items-start">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">Invoice</h2>
-            <p className="text-sm text-gray-600 mt-1">Bill Number: {bill.billNumber}</p>
+            <h2 className="text-2xl font-bold text-gray-800">{bill.billNumber}</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Due date: {format(bill.date, 'dd MMMM yyyy')}
+            </p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-600">Date:</p>
-            <p className="font-medium">{format(bill.date, 'dd/MM/yyyy')}</p>
+            <p className="text-sm text-gray-600">Currency</p>
+            <p className="font-medium">INR - Indian Rupee</p>
           </div>
         </div>
         
         <div className="mt-6 grid grid-cols-2 gap-8">
           <div>
-            <p className="text-sm text-gray-600">Bill To:</p>
+            <p className="text-sm text-gray-600">Billed to:</p>
             <p className="font-medium mt-1">{bill.customerName}</p>
             <p className="text-sm text-gray-600 mt-1">{bill.customerPhone}</p>
+            {bill.isGstBill && bill.gstNumber && (
+              <p className="text-sm text-gray-600 mt-1">GST: {bill.gstNumber}</p>
+            )}
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600">Payment Type:</p>
@@ -39,11 +44,11 @@ export function BillPreview({ bill }: BillPreviewProps) {
 
       <table className="w-full mb-8">
         <thead>
-          <tr className="border-b border-gray-200">
-            <th className="py-2 text-left">Item</th>
-            <th className="py-2 text-right">Qty</th>
-            <th className="py-2 text-right">Price</th>
-            <th className="py-2 text-right">Total</th>
+          <tr className="border-b border-gray-200 text-sm">
+            <th className="py-3 text-left font-medium text-gray-600">DESCRIPTION</th>
+            <th className="py-3 text-right font-medium text-gray-600">QTY</th>
+            <th className="py-3 text-right font-medium text-gray-600">UNIT PRICE</th>
+            <th className="py-3 text-right font-medium text-gray-600">AMOUNT</th>
           </tr>
         </thead>
         <tbody>
@@ -51,25 +56,35 @@ export function BillPreview({ bill }: BillPreviewProps) {
             const product = products.find(p => p.id === item.productId);
             return (
               <tr key={index} className="border-b border-gray-100">
-                <td className="py-2">{product?.name}</td>
-                <td className="py-2 text-right">{item.quantity}</td>
-                <td className="py-2 text-right">₹{item.price.toLocaleString('en-IN')}</td>
-                <td className="py-2 text-right">₹{item.subtotal.toLocaleString('en-IN')}</td>
+                <td className="py-4">{product?.name}</td>
+                <td className="py-4 text-right">{item.quantity}</td>
+                <td className="py-4 text-right">₹{item.price.toLocaleString('en-IN')}</td>
+                <td className="py-4 text-right">₹{item.subtotal.toLocaleString('en-IN')}</td>
               </tr>
             );
           })}
         </tbody>
-        <tfoot>
-          <tr>
-            <td colSpan={3} className="py-2 text-right font-medium">Total:</td>
-            <td className="py-2 text-right font-bold">₹{bill.total.toLocaleString('en-IN')}</td>
-          </tr>
-        </tfoot>
       </table>
 
       <div className="border-t border-gray-200 pt-4">
-        <p className="text-sm text-gray-600">Terms & Conditions:</p>
-        <p className="text-sm mt-1">Payment is due within 30 days</p>
+        <div className="flex justify-end">
+          <div className="w-64 space-y-3">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Subtotal</span>
+              <span>₹{bill.total.toLocaleString('en-IN')}</span>
+            </div>
+            {bill.isGstBill && bill.totalGst && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">GST</span>
+                <span>₹{bill.totalGst.toLocaleString('en-IN')}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold pt-2 border-t border-gray-200">
+              <span>Total</span>
+              <span>₹{(bill.total + (bill.totalGst || 0)).toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

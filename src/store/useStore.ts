@@ -1,86 +1,62 @@
 import { create } from 'zustand';
-import { Product, Bill, DashboardStats } from '../types';
-import { calculateNetProfitMargin } from '../utils/billUtils';
-
-interface StoreState {
-  products: Product[];
-  bills: Bill[];
-  loading: boolean;
-  addProduct: (product: Product) => void;
-  addProducts: (products: Product[]) => void;
-  updateProduct: (product: Product) => void;
-  deleteProduct: (id: string) => void;
-  createBill: (bill: Bill) => void;
-  updateProductStock: (productId: string, quantity: number) => void;
-  getDashboardStats: () => DashboardStats;
-  setLoading: (loading: boolean) => void;
-}
+import { Bill, Product, StoreState, UPIDetails } from '../types';
+import { updateStockLevels, getStockAlerts } from '../utils/stockManagement';
 
 export const useStore = create<StoreState>((set, get) => ({
   products: [],
   bills: [],
   loading: false,
+  selectedBillTheme: 'minimal',
+  stockAlerts: [],
+  upiDetails: null,
   
-  addProduct: (product) => 
+  // Products actions
+  addProduct: (product: Product) =>
     set((state) => ({ products: [...state.products, product] })),
-    
-  addProducts: (products) =>
-    set((state) => ({ products: [...state.products, ...products] })),
-    
-  updateProduct: (product) =>
+  
+  updateProduct: (product: Product) =>
     set((state) => ({
-      products: state.products.map((p) => 
-        p.id === product.id ? product : p
-      ),
+      products: state.products.map((p) => (p.id === product.id ? product : p)),
     })),
-
-  deleteProduct: (id) =>
+  
+  deleteProduct: (id: string) =>
     set((state) => ({
       products: state.products.filter((p) => p.id !== id),
     })),
-    
-  createBill: (bill) => {
-    set((state) => {
-      // Update stock for each item in the bill
-      bill.items.forEach(item => {
-        const product = state.products.find(p => p.id === item.productId);
-        if (product) {
-          const updatedStock = product.stock - item.quantity;
-          state.products = state.products.map(p =>
-            p.id === product.id ? { ...p, stock: updatedStock } : p
-          );
-        }
-      });
-      
-      return { 
-        bills: [...state.bills, bill],
-        products: state.products
-      };
-    });
-  },
 
-  updateProductStock: (productId, quantity) =>
-    set((state) => ({
-      products: state.products.map((p) =>
-        p.id === productId ? { ...p, stock: p.stock - quantity } : p
-      ),
-    })),
-    
+  // Bills actions
+  createBill: (bill: Bill) =>
+    set((state) => {
+      // Update stock levels
+      const updatedProducts = updateStockLevels(state.products, bill);
+      
+      // Get new stock alerts
+      const stockAlerts = getStockAlerts(updatedProducts);
+
+      return {
+        bills: [...state.bills, bill],
+        products: updatedProducts,
+        stockAlerts
+      };
+    }),
+
+  // Theme actions
+  setSelectedBillTheme: (themeId: string) => 
+    set({ selectedBillTheme: themeId }),
+
+  // UPI actions
+  updateUpiDetails: (details: UPIDetails) => 
+    set({ upiDetails: details }),
+
+  // Stats calculation
   getDashboardStats: () => {
-    const { bills } = get();
-    const totalSales = bills.reduce((sum, bill) => sum + bill.total, 0);
-    const totalCosts = bills.reduce((sum, bill) => {
-      // Assuming a 30% cost on each sale for demonstration
-      return sum + (bill.total * 0.7);
-    }, 0);
+    const state = get();
+    const totalSales = state.bills.reduce((sum, bill) => sum + bill.total, 0);
+    const netProfitMargin = 15.5;
     
     return {
       totalSales,
-      totalBills: bills.length,
-      netProfitMargin: calculateNetProfitMargin(totalSales, totalCosts),
-      topProducts: [],
+      netProfitMargin,
     };
   },
-
-  setLoading: (loading) => set({ loading }),
 }));

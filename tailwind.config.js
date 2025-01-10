@@ -3,7 +3,11 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        'sans': ['Nunito', 'sans-serif'],
+      },
       colors: {
+        
         primary: {
           50: '#fdf3f1',
           100: '#fbe7e2',
